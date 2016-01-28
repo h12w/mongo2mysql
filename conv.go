@@ -15,8 +15,9 @@ import (
 
 type (
 	Config struct {
+		Config string  `long:"config"`
 		Mongo  Mongo   `yaml:"mongo"`
-		MySQL  MySQL   `yaml:"mysql"`
+		MySQL  MySQL   `yaml:"mysql" group:"mysql" namespace:"mysql"`
 		Tables []Table `yaml:"tables"`
 	}
 	Mongo struct {
@@ -26,7 +27,7 @@ type (
 	}
 	MySQL struct {
 		LoginPath string `yaml:"login_path"`
-		DB        string `yaml:"db"`
+		DB        string `yaml:"db" long:"db"`
 	}
 	Table struct {
 		MongoName string `yaml:"mongo_name"`

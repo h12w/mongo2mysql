@@ -1,21 +1,22 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 
+	"github.com/jessevdk/go-flags"
 	"gopkg.in/yaml.v2"
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Println("mongo2mysql <config.json>")
-		os.Exit(1)
-	}
-	cfg, err := loadConfig(os.Args[1])
+	cfg, err := loadConfig()
 	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	parser := flags.NewParser(cfg, flags.HelpFlag|flags.PassDoubleDash)
+	if _, err := parser.Parse(); err != nil {
 		log.Fatal(err)
 	}
 	for _, table := range cfg.Tables {
@@ -25,8 +26,15 @@ func main() {
 	}
 }
 
-func loadConfig(file string) (*Config, error) {
-	f, err := os.Open(file)
+func loadConfig() (*Config, error) {
+	var fileConfig struct {
+		ConfigFile string `long:"config" default:"config.yaml"`
+	}
+	parser := flags.NewParser(&fileConfig, flags.IgnoreUnknown)
+	if _, err := parser.Parse(); err != nil {
+		return nil, err
+	}
+	f, err := os.Open(fileConfig.ConfigFile)
 	if err != nil {
 		return nil, err
 	}
