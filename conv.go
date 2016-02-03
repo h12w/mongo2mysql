@@ -34,6 +34,7 @@ type (
 		MySQLName string `yaml:"mysql_name"`
 		Fields    Fields `yaml:"fields"`
 		CreateCmd string `yaml:"create_cmd"`
+		AfterCmd  string `yaml:"after_cmd"`
 	}
 
 	Record     map[string]interface{}
@@ -53,9 +54,12 @@ func (table *Table) Process(cfg *Config) error {
 		pipe.Replace(table.Fields.expand().convertLine),
 		pipe.Exec("mysql",
 			"--login-path="+cfg.MySQL.LoginPath,
+			"--compress=TRUE",
 			"--database", cfg.MySQL.DB,
 			"--verbose",
-			"--execute", table.CreateCmd+";LOAD DATA LOCAL INFILE '/dev/stdin' INTO TABLE "+table.MySQLName),
+			"--execute", table.CreateCmd+
+				";LOAD DATA LOCAL INFILE '/dev/stdin' IGNORE INTO TABLE "+table.MySQLName+","+
+				table.AfterCmd),
 		pipe.Write(os.Stdout),
 	)
 	return pipe.Run(p)

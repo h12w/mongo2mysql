@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"io/ioutil"
 	"log"
 	"os"
@@ -9,13 +10,20 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+var (
+	errNoConfigFile = errors.New("no config file")
+)
+
 func main() {
 	cfg, err := loadConfig()
+	parser := flags.NewParser(cfg, flags.HelpFlag|flags.PassDoubleDash)
 	if err != nil {
+		if err == errNoConfigFile {
+			parser.WriteHelp(os.Stdout)
+		}
 		log.Fatal(err)
 		return
 	}
-	parser := flags.NewParser(cfg, flags.HelpFlag|flags.PassDoubleDash)
 	if _, err := parser.Parse(); err != nil {
 		log.Fatal(err)
 	}
@@ -36,7 +44,7 @@ func loadConfig() (*Config, error) {
 	}
 	f, err := os.Open(fileConfig.ConfigFile)
 	if err != nil {
-		return nil, err
+		return &Config{}, errNoConfigFile
 	}
 	defer f.Close()
 	buf, err := ioutil.ReadAll(f)
